@@ -24,7 +24,7 @@ class TestExecutePlan:
 
         assert len(results) == 1
         assert results[0].success
-        assert (tmp_path / "file_name.txt").exists()
+        assert (tmp_path / "file\uff1aname.txt").exists()  # fullwidth colon
         assert not (tmp_path / "file:name.txt").exists()
 
     def test_renames_directory(self, tmp_path: Path) -> None:
@@ -35,8 +35,8 @@ class TestExecutePlan:
         results = execute_plan(plan)
 
         assert all(r.success for r in results)
-        assert (tmp_path / "bad_dir").is_dir()
-        assert (tmp_path / "bad_dir" / "clean.txt").exists()
+        assert (tmp_path / "bad\uff1adir").is_dir()
+        assert (tmp_path / "bad\uff1adir" / "clean.txt").exists()
 
     def test_nested_renames(self, tmp_path: Path) -> None:
         """Deeply nested renames work correctly (bottom-up ordering)."""
@@ -45,6 +45,18 @@ class TestExecutePlan:
         (deep / "c:file.txt").touch()
 
         plan = build_rename_plan(tmp_path)
+        results = execute_plan(plan)
+
+        assert all(r.success for r in results)
+        assert (tmp_path / "a\uff1adir" / "b\uff1adir" / "c\uff1afile.txt").exists()
+
+    def test_nested_renames_override_mode(self, tmp_path: Path) -> None:
+        """Override mode with simple replacement also works bottom-up."""
+        deep = tmp_path / "a:dir" / "b:dir"
+        deep.mkdir(parents=True)
+        (deep / "c:file.txt").touch()
+
+        plan = build_rename_plan(tmp_path, replace_char="_")
         results = execute_plan(plan)
 
         assert all(r.success for r in results)
@@ -61,7 +73,7 @@ class TestExecutePlan:
         data = json.loads(log_file.read_text())
         assert data["total_renames"] == 1
         assert len(data["renames"]) == 1
-        assert data["renames"][0]["destination"].endswith("file_name.txt")
+        assert "file\uff1aname.txt" in data["renames"][0]["destination"]
 
     def test_source_missing_records_error(self, tmp_path: Path) -> None:
         """If source disappears between scan and execute, an error is recorded."""
@@ -69,7 +81,6 @@ class TestExecutePlan:
         f.touch()
 
         plan = build_rename_plan(tmp_path)
-        # Remove the file before execution.
         f.unlink()
 
         results = execute_plan(plan)
@@ -98,7 +109,7 @@ class TestFormatPlanSummary:
 
         summary = format_plan_summary(plan)
         assert "file:name.txt" in summary
-        assert "file_name.txt" in summary
+        assert "file\uff1aname.txt" in summary  # fullwidth colon in output
 
     def test_verbose_shows_issues(self, tmp_path: Path) -> None:
         (tmp_path / "file:name.txt").touch()

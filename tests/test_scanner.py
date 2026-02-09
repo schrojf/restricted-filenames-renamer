@@ -35,6 +35,14 @@ class TestBuildRenamePlan:
         assert plan.has_changes
         assert plan.total_renames_needed == 1
         assert plan.actions[0].original_name == "file:name.txt"
+        assert plan.actions[0].final_name == "file\uff1aname.txt"  # fullwidth colon
+
+    def test_forbidden_char_override_mode(self, tmp_path: Path) -> None:
+        """With replace_char override, uses simple replacement."""
+        (tmp_path / "file:name.txt").touch()
+
+        plan = build_rename_plan(tmp_path, replace_char="_")
+
         assert plan.actions[0].final_name == "file_name.txt"
 
     def test_reserved_name(self, tmp_path: Path) -> None:
@@ -60,7 +68,7 @@ class TestBuildRenamePlan:
         plan = build_rename_plan(tmp_path)
 
         assert plan.has_changes
-        assert plan.actions[0].final_name == "file.txt"
+        assert plan.actions[0].final_name == "file.txt\uff0e"  # fullwidth dot
 
     def test_nested_directories_bottom_up(self, tmp_path: Path) -> None:
         """Deepest entries should appear first in the plan."""
@@ -71,13 +79,11 @@ class TestBuildRenamePlan:
         plan = build_rename_plan(tmp_path)
 
         assert plan.has_changes
-        # The deepest file should come before the directories.
         names = [a.original_name for a in plan.actions]
         assert "file:deep.txt" in names
         assert "level:2" in names
         assert "level:1" in names
 
-        # file:deep.txt and level:2 should appear before level:1.
         idx_deep_file = names.index("file:deep.txt")
         idx_level2 = names.index("level:2")
         idx_level1 = names.index("level:1")
@@ -91,19 +97,31 @@ class TestBuildRenamePlan:
 
         plan = build_rename_plan(tmp_path)
 
+        # Both map to different fullwidth chars, so NO collision in Unicode mode.
+        final_names = {a.final_name for a in plan.actions}
+        assert len(final_names) == 2
+        assert "a\uff1ab.txt" in final_names  # fullwidth colon
+        assert "a\uff0ab.txt" in final_names  # fullwidth asterisk
+
+    def test_collision_in_override_mode(self, tmp_path: Path) -> None:
+        """In override mode, two files mapping to same name get suffixes."""
+        (tmp_path / "a:b.txt").touch()
+        (tmp_path / "a*b.txt").touch()
+
+        plan = build_rename_plan(tmp_path, replace_char="_")
+
         final_names = {a.final_name for a in plan.actions}
         assert len(final_names) == 2
         assert "a_b.txt" in final_names
-        # The second file should have a suffix.
         other = final_names - {"a_b.txt"}
         assert other.pop().startswith("a_b")
 
-    def test_collision_with_existing_clean_file(self, tmp_path: Path) -> None:
-        """A dirty file colliding with an existing clean file gets a suffix."""
-        (tmp_path / "a_b.txt").touch()  # Clean — already safe.
-        (tmp_path / "a:b.txt").touch()  # Dirty — sanitizes to "a_b.txt".
+    def test_collision_with_existing_clean_file_override(self, tmp_path: Path) -> None:
+        """In override mode, a dirty file colliding with a clean file gets a suffix."""
+        (tmp_path / "a_b.txt").touch()
+        (tmp_path / "a:b.txt").touch()
 
-        plan = build_rename_plan(tmp_path)
+        plan = build_rename_plan(tmp_path, replace_char="_")
 
         assert plan.total_renames_needed == 1
         action = plan.actions[0]
@@ -131,7 +149,7 @@ class TestBuildRenamePlan:
 
         assert plan.total_renames_needed == 1
         assert plan.actions[0].kind == EntryKind.DIRECTORY
-        assert plan.actions[0].final_name == "bad_dir"
+        assert plan.actions[0].final_name == "bad\uff1adir"  # fullwidth colon
 
     def test_custom_replace_char(self, tmp_path: Path) -> None:
         (tmp_path / "a:b.txt").touch()

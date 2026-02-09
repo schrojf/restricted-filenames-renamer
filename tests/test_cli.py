@@ -16,7 +16,7 @@ class TestCLIDryRun:
 
         assert exit_code == 0
         assert (tmp_path / "file:name.txt").exists()
-        assert not (tmp_path / "file_name.txt").exists()
+        assert not (tmp_path / "file\uff1aname.txt").exists()
 
     def test_dry_run_clean_directory(self, tmp_path: Path) -> None:
         (tmp_path / "clean.txt").touch()
@@ -30,11 +30,12 @@ class TestCLIWrite:
     def test_write_with_yes(self, tmp_path: Path) -> None:
         """--write --yes renames files without prompting."""
         (tmp_path / "file:name.txt").touch()
+        log_file = tmp_path / "log.json"
 
-        exit_code = main([str(tmp_path), "--write", "--yes"])
+        exit_code = main([str(tmp_path), "--write", "--yes", "--log-file", str(log_file)])
 
         assert exit_code == 0
-        assert (tmp_path / "file_name.txt").exists()
+        assert (tmp_path / "file\uff1aname.txt").exists()
         assert not (tmp_path / "file:name.txt").exists()
 
     def test_write_creates_log(self, tmp_path: Path) -> None:
@@ -66,8 +67,19 @@ class TestCLIValidation:
 class TestCLIOptions:
     def test_custom_replace_char(self, tmp_path: Path) -> None:
         (tmp_path / "a:b.txt").touch()
+        log_file = tmp_path / "log.json"
 
-        exit_code = main([str(tmp_path), "--write", "--yes", "--replace-char", "-"])
+        exit_code = main(
+            [
+                str(tmp_path),
+                "--write",
+                "--yes",
+                "--replace-char",
+                "-",
+                "--log-file",
+                str(log_file),
+            ]
+        )
 
         assert exit_code == 0
         assert (tmp_path / "a-b.txt").exists()
@@ -100,3 +112,14 @@ class TestCLIOptions:
         txt_files = [f for f in tmp_path.iterdir() if f.suffix == ".txt"]
         assert len(txt_files) == 1
         assert len(txt_files[0].name) <= 20
+
+    def test_default_unicode_mode(self, tmp_path: Path) -> None:
+        """Default mode uses Unicode fullwidth replacements, not underscore."""
+        (tmp_path / "file:name.txt").touch()
+        log_file = tmp_path / "log.json"
+
+        exit_code = main([str(tmp_path), "--write", "--yes", "--log-file", str(log_file)])
+
+        assert exit_code == 0
+        assert (tmp_path / "file\uff1aname.txt").exists()  # fullwidth colon
+        assert not (tmp_path / "file_name.txt").exists()  # NOT underscore

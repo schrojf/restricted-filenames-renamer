@@ -14,7 +14,6 @@ from pathlib import Path
 
 from .sanitizer import (
     DEFAULT_MAX_NAME_LENGTH,
-    DEFAULT_REPLACE_CHAR,
     WINDOWS_MAX_PATH,
     sanitize_name,
 )
@@ -150,7 +149,7 @@ def _find_available_name(desired: str, taken: set[str], max_length: int) -> str:
 def build_rename_plan(
     root: Path,
     *,
-    replace_char: str = DEFAULT_REPLACE_CHAR,
+    replace_char: str | None = None,
     max_length: int = DEFAULT_MAX_NAME_LENGTH,
     follow_symlinks: bool = False,
 ) -> RenamePlan:

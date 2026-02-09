@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 
 from .renamer import execute_plan, format_plan_summary, generate_log_filename
-from .sanitizer import ALL_RESTRICTED_CHARS, DEFAULT_MAX_NAME_LENGTH, DEFAULT_REPLACE_CHAR
+from .sanitizer import ALL_RESTRICTED_CHARS, DEFAULT_MAX_NAME_LENGTH
 from .scanner import build_rename_plan
 
 
@@ -44,8 +44,11 @@ def create_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--replace-char",
         type=str,
-        default=DEFAULT_REPLACE_CHAR,
-        help=f"Character to replace forbidden characters with (default: '{DEFAULT_REPLACE_CHAR}').",
+        default=None,
+        help=(
+            "Replace all restricted characters with this single character instead "
+            "of the default Unicode equivalents (e.g. '_' or '-')."
+        ),
     )
     parser.add_argument(
         "--max-length",
@@ -91,7 +94,7 @@ def main(argv: list[str] | None = None) -> int:
     root_arg: Path = args.path
     write: bool = args.write
     yes: bool = args.yes
-    replace_char: str = args.replace_char
+    replace_char: str | None = args.replace_char
     max_length: int = args.max_length
     follow_symlinks: bool = args.follow_symlinks
     log_file_arg: Path | None = args.log_file
@@ -103,17 +106,18 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Error: '{root_arg}' is not a directory.", file=sys.stderr)
         return 1
 
-    # Validate replace_char.
-    if len(replace_char) != 1:
-        print("Error: --replace-char must be a single character.", file=sys.stderr)
-        return 1
+    # Validate replace_char (only when explicitly provided).
+    if replace_char is not None:
+        if len(replace_char) != 1:
+            print("Error: --replace-char must be a single character.", file=sys.stderr)
+            return 1
 
-    if replace_char in ALL_RESTRICTED_CHARS:
-        print(
-            f"Error: --replace-char '{replace_char}' is itself a restricted character.",
-            file=sys.stderr,
-        )
-        return 1
+        if replace_char in ALL_RESTRICTED_CHARS:
+            print(
+                f"Error: --replace-char '{replace_char}' is itself a restricted character.",
+                file=sys.stderr,
+            )
+            return 1
 
     # Build the rename plan.
     plan = build_rename_plan(
