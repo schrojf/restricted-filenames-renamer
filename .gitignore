@@ -5,6 +5,7 @@ tmp/
 trash/
 attic/
 .kash/
+rename_log_*.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
