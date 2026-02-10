@@ -159,6 +159,48 @@ For example, if a directory contains both `a:b.txt` and `a*b.txt`, and you use
 With the default Unicode mode, this collision does not occur because `:` and `*`
 map to different Unicode characters (`：` and `＊`).
 
+## Programmatic usage
+
+All sanitization functions and data types are available as a Python library:
+
+```python
+from restricted_filenames_renamer import (
+    # High-level API
+    sanitize_name,
+    is_name_safe,
+    build_rename_plan,
+    execute_plan,
+    format_plan_summary,
+
+    # Individual pipeline steps
+    replace_forbidden_chars,
+    strip_trailing_dots_spaces,
+    handle_reserved_names,
+    truncate_name,
+
+    # Data types
+    EntryKind,
+    RenameAction,
+    RenamePlan,
+    RenameResult,
+
+    # Constants
+    FORBIDDEN_CHARS,
+    CONTROL_CHARS,
+    ALL_RESTRICTED_CHARS,
+    UNICODE_CHAR_MAP,
+    DEFAULT_MAX_NAME_LENGTH,
+    WINDOWS_MAX_PATH,
+)
+```
+
+The sanitizer functions are pure (no filesystem access) and can be used to
+validate or transform individual filenames without scanning a directory. The
+scanner and renamer functions provide the full directory-walking and renaming
+workflow.
+
+See the [README](../README.md#library-usage) for detailed examples.
+
 ## Caveats
 
 ### Fullwidth Unicode characters in existing filenames

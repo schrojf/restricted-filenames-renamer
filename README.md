@@ -1,8 +1,9 @@
 # restricted-filenames-renamer
 
-A CLI tool that recursively renames files and directories to be portable across
-operating systems. It replaces characters that are forbidden on Windows, handles
-reserved device names, trailing dots/spaces, and enforces filename length limits.
+A CLI tool and Python library that recursively renames files and directories to
+be portable across operating systems. It replaces characters that are forbidden
+on Windows, handles reserved device names, trailing dots/spaces, and enforces
+filename length limits.
 
 By default, restricted characters are replaced with visually similar Unicode
 equivalents (fullwidth characters and Control Pictures), following the same
@@ -158,6 +159,102 @@ Some systems have shorter limits. To enforce a 200-character maximum:
 
 ```shell
 restricted-filenames-renamer /path --max-length 200
+```
+
+## Library usage
+
+The package can also be used as an importable Python library.
+
+### Checking if a filename is safe
+
+```python
+from restricted_filenames_renamer import is_name_safe, sanitize_name
+
+# Quick boolean check
+assert is_name_safe("readme.md")
+assert not is_name_safe("file:name.txt")
+
+# Get the sanitized name and a list of issues
+safe_name, issues = sanitize_name("file:name.txt")
+print(safe_name)   # file：name.txt  (fullwidth colon)
+print(issues)      # ['Replaced forbidden characters [':']']
+```
+
+### Using individual pipeline steps
+
+```python
+from restricted_filenames_renamer import (
+    replace_forbidden_chars,
+    strip_trailing_dots_spaces,
+    handle_reserved_names,
+    truncate_name,
+)
+
+# Each step returns (result, issues)
+name, issues = replace_forbidden_chars("file*name?.txt")
+name, issues = strip_trailing_dots_spaces("readme.")
+name, issues = handle_reserved_names("CON.txt")
+name, issues = truncate_name("a" * 300 + ".txt")
+```
+
+### Using a simple replacement character
+
+```python
+from restricted_filenames_renamer import sanitize_name
+
+# Replace all restricted chars with underscore instead of Unicode
+safe_name, issues = sanitize_name("file:name*.txt", replace_char="_")
+print(safe_name)  # file_name_.txt
+```
+
+### Scanning a directory and building a rename plan
+
+```python
+from pathlib import Path
+from restricted_filenames_renamer import build_rename_plan, format_plan_summary
+
+plan = build_rename_plan(Path("/path/to/directory"))
+
+# Inspect the plan
+print(f"Entries scanned: {plan.total_entries_scanned}")
+print(f"Renames needed: {plan.total_renames_needed}")
+
+for action in plan.actions:
+    print(f"  {action.source.name} -> {action.final_name}")
+
+# Or use the built-in formatter
+print(format_plan_summary(plan, verbose=True))
+```
+
+### Executing a rename plan
+
+```python
+from pathlib import Path
+from restricted_filenames_renamer import build_rename_plan, execute_plan
+
+plan = build_rename_plan(Path("/path/to/directory"))
+
+if plan.has_changes:
+    results = execute_plan(plan, log_file=Path("renames.json"))
+
+    for result in results:
+        if result.success:
+            print(f"OK: {result.action.source.name} -> {result.action.final_name}")
+        else:
+            print(f"FAIL: {result.action.source.name}: {result.error_message}")
+```
+
+### Available constants
+
+```python
+from restricted_filenames_renamer import (
+    FORBIDDEN_CHARS,          # frozenset of 9 Windows-forbidden chars
+    CONTROL_CHARS,            # frozenset of 32 ASCII control chars
+    ALL_RESTRICTED_CHARS,     # union of the above
+    UNICODE_CHAR_MAP,         # dict mapping each restricted char to its Unicode replacement
+    DEFAULT_MAX_NAME_LENGTH,  # 255
+    WINDOWS_MAX_PATH,         # 260
+)
 ```
 
 ## JSON log format

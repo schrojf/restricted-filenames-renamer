@@ -7,7 +7,7 @@ Repository = "https://github.com/schrojf/restricted-filenames-renamer"
 
 [project]
 name = "restricted-filenames-renamer"
-description = "CLI tool to recursively rename files and directories for cross-OS portability"
+description = "CLI tool and Python library to recursively rename files and directories for cross-OS portability"
 authors = [
     { name="Viliam Schrojf", email="viliam@schrojf.sk" },
 ]
