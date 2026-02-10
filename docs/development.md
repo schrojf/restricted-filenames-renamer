@@ -84,8 +84,9 @@ See [publishing.md](publishing.md) for instructions on publishing to PyPI.
 
 ## Documentation
 
+- [Restricted filenames reference](restricted-filenames.md) -- cross-platform
+  filename restrictions and the Unicode replacement strategy
 - [uv docs](https://docs.astral.sh/uv/)
-
 - [basedpyright docs](https://docs.basedpyright.com/latest/)
 
 * * *
