@@ -41,6 +41,9 @@ classifiers = [
 dependencies = [
 ]
 
+[project.optional-dependencies]
+tui = ["textual>=1.0.0"]
+
 
 # ---- Dev dependencies ----
 
@@ -48,16 +51,19 @@ dependencies = [
 dev = [
     "pytest>=9.0.2",
     "pytest-sugar>=1.1.1",
+    "pytest-asyncio>=0.24.0",
     "ruff>=0.14.11",
     "codespell>=2.4.1",
     "rich>=14.2.0",
     "basedpyright>=1.37.1",
     "funlog>=0.2.1",
+    "textual-dev>=1.0.0",
 ]
 
 [project.scripts]
 # Add script entry points here:
 restricted-filenames-renamer = "restricted_filenames_renamer:main"
+restricted-filenames-renamer-tui = "restricted_filenames_renamer:tui_main"
 
 
 # ---- Build system ----

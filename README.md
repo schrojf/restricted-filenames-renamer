@@ -1,9 +1,9 @@
 # restricted-filenames-renamer
 
-A CLI tool and Python library that recursively renames files and directories to
-be portable across operating systems. It replaces characters that are forbidden
-on Windows, handles reserved device names, trailing dots/spaces, and enforces
-filename length limits.
+A CLI tool, interactive TUI, and Python library that recursively renames files
+and directories to be portable across operating systems. It replaces characters
+that are forbidden on Windows, handles reserved device names, trailing
+dots/spaces, and enforces filename length limits.
 
 By default, restricted characters are replaced with visually similar Unicode
 equivalents (fullwidth characters and Control Pictures), following the same
@@ -33,6 +33,13 @@ pip install restricted-filenames-renamer
 pipx install restricted-filenames-renamer
 ```
 
+To also install the optional interactive TUI (requires
+[Textual](https://textual.textualize.io/)):
+
+```shell
+pip install restricted-filenames-renamer[tui]
+```
+
 For development setup, see [docs/development.md](docs/development.md).
 
 ## Quick start
@@ -49,6 +56,9 @@ restricted-filenames-renamer /path/to/directory --write --yes
 
 # Verbose output showing detailed issues for each file
 restricted-filenames-renamer /path/to/directory --verbose
+
+# Launch the interactive TUI (requires the 'tui' extra)
+restricted-filenames-renamer-tui /path/to/directory
 ```
 
 ## What it fixes
@@ -92,6 +102,35 @@ usage: restricted-filenames-renamer [-h] [--write] [--yes] [--replace-char REPLA
 | 0 | Success (or no renames needed) |
 | 1 | One or more renames failed |
 | 2 | User cancelled the operation |
+
+## Interactive TUI
+
+An optional interactive terminal user interface is available, built with
+[Textual](https://textual.textualize.io/). Install it with:
+
+```shell
+pip install restricted-filenames-renamer[tui]
+```
+
+Then launch it:
+
+```shell
+restricted-filenames-renamer-tui /path/to/directory
+```
+
+The TUI provides:
+
+- **Settings bar** -- change replace character, max filename length, and symlink
+  handling interactively, then re-scan
+- **Rename table** -- browse all planned renames with kind, original/new names,
+  directory, and issue count
+- **Detail panel** -- select a row to see full source/destination paths and all
+  issues found for that entry
+- **Status log** -- see scan summaries, warnings, and per-file rename results
+- **Keyboard shortcuts** -- `r` to re-scan, `a` to apply renames, `q` to quit
+
+The TUI uses the same scan/rename engine as the CLI. All settings (replace char,
+max length, symlinks) can be adjusted in the TUI and take effect on re-scan.
 
 ## Usage examples
 
@@ -303,7 +342,8 @@ a directory are resolved automatically by appending `_1`, `_2`, etc.
 - [Restricted filenames reference](docs/restricted-filenames.md) -- cross-platform
   filename restrictions, full character mapping table, and caveats
 - [Installation](docs/installation.md) -- installing uv and Python
-- [Development](docs/development.md) -- development workflows, IDE setup
+- [Development](docs/development.md) -- development workflows, IDE setup, TUI
+  development
 - [Publishing](docs/publishing.md) -- publishing releases to PyPI
 
 ## License

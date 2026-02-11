@@ -45,6 +45,25 @@ from .scanner import (
     validate_path_under_root,
 )
 
+# TUI entry point (optional — requires 'tui' extra)
+try:
+    from .tui import tui_main
+except ImportError:
+
+    def tui_main(
+        argv: list[str] | None = None,  # pyright: ignore[reportUnusedParameter]
+    ) -> int:
+        """Stub that prints an install hint when Textual is not available."""
+        import sys  # noqa: I001
+
+        print(
+            "Error: The TUI requires the 'tui' extra. "
+            "Install with: pip install restricted-filenames-renamer[tui]",
+            file=sys.stderr,
+        )
+        return 1
+
+
 __all__ = [
     # CLI
     "main",
@@ -77,6 +96,8 @@ __all__ = [
     "format_plan_summary",
     "generate_log_filename",
     "write_rename_log",
+    # TUI
+    "tui_main",
 ]
 
 if __name__ == "__main__":

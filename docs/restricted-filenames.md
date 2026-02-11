@@ -191,6 +191,9 @@ from restricted_filenames_renamer import (
     UNICODE_CHAR_MAP,
     DEFAULT_MAX_NAME_LENGTH,
     WINDOWS_MAX_PATH,
+
+    # TUI entry point (requires the 'tui' extra)
+    tui_main,
 )
 ```
 

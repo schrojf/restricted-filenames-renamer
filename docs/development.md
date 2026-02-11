@@ -67,6 +67,32 @@ source .venv/bin/activate
 
 See [uv docs](https://docs.astral.sh/uv/) for details.
 
+## Optional TUI
+
+The project includes an optional interactive TUI built with
+[Textual](https://textual.textualize.io/). Textual is declared as an optional
+dependency under the `tui` extra:
+
+```shell
+# End users install the TUI with:
+pip install restricted-filenames-renamer[tui]
+```
+
+For development, `make install` (which runs `uv sync --all-extras`) automatically
+installs the TUI dependency along with `textual-dev` (Textual's developer tools)
+and `pytest-asyncio` (for async TUI tests). No extra steps are needed.
+
+The TUI lives in `src/restricted_filenames_renamer/tui.py` and its tests are in
+`tests/test_tui.py`. Tests use Textual's
+[pilot](https://textual.textualize.io/guide/testing/) framework for headless
+async testing.
+
+To run the TUI during development:
+
+```shell
+uv run restricted-filenames-renamer-tui /path/to/directory
+```
+
 ## IDE setup
 
 If you use VSCode or a fork like Cursor or Windsurf, you can install the following

@@ -108,6 +108,7 @@ class TestPublicAPI:
             "format_plan_summary",
             "generate_log_filename",
             "write_rename_log",
+            "tui_main",
         }
         actual = set(restricted_filenames_renamer.__all__)
         assert actual == expected

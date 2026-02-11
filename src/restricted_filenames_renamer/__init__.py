@@ -30,6 +30,8 @@ __all__ = (  # noqa: F405
     "format_plan_summary",
     "generate_log_filename",
     "write_rename_log",
+    # TUI
+    "tui_main",
 )
 
 from .restricted_filenames_renamer import *  # noqa: F403
